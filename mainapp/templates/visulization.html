@@ -1,0 +1,475 @@
+{% extends 'index.html' %}
+{% block title %}Visulization{% endblock %}
+{% block content %}
+<style>
+    body {
+            background-color: rgb(211, 226, 220);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+        }
+
+        .pagination {
+            margin-top: 10px;
+        }
+
+        button {
+            margin: 0 5px;
+            padding: 8px 16px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+        }
+        
+        .bubbles {
+            stroke-width: 2px;
+            stroke: white;
+        }
+        .bubbles:hover {
+            stroke: black;
+        }
+</style>
+<div class="container">
+    <h2>Bar Chart</h2>
+    <div class="chart-container">
+        <canvas id="intensityChart"></canvas>
+    </div>
+    <div class="pagination">
+        <button onclick="showPrevious()">Previous</button>
+        <button onclick="showNext()">Next</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Horizontal Bar Chart</h2>
+    <div class="chart-container">
+        <canvas id="likelihoodChart"></canvas>
+    </div>
+</div>
+
+<div class="container">
+    <div class="pagination">
+        <button class="btn btn-primary" onclick="showPrevious2()">Previous</button>
+        <button class="btn btn-primary" onclick="showNext2()">Next</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Radar Chart</h2>
+    <div class="chart-container">
+        <canvas id="radarChart"></canvas>
+    </div>
+</div>
+
+<div class="container">
+    <div class="pagination">
+        <button class="btn btn-primary" onclick="previousData()">Previous</button>
+        <button class="btn btn-primary" onclick="nextData()">Next</button>
+    </div>
+</div>
+
+<div class="container">
+    <h2>Bubble Chart</h2>
+    <div class="container">
+        <div class="pagination">
+        </div>
+    </div>
+    
+    <div class="chart-container">
+        <div id="my_dataviz"></div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="pagination">
+        <button class="btn btn-primary" onclick="previousData5()">Previous</button>
+        <button class="btn btn-primary" onclick="nextData5()">Next</button>
+    </div>
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0"></script>
+<script src="https://d3js.org/d3.v6.js"></script>
+
+
+<script>
+
+    // Bar Chart
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var ctx = document.getElementById('intensityChart').getContext('2d');
+        var allLabels = {{ topic|safe }};
+        var allValues = {{ intensity|safe }};
+        var pageSize = 50; 
+        var currentPage = 0;
+        var myChart;
+
+        window.showPrevious = function() {
+            if (currentPage > 0) {
+                currentPage--;
+                updateChart();
+            }
+        }
+
+        window.showNext = function() {
+            if ((currentPage + 1) * pageSize < allLabels.length) {
+                currentPage++;
+                updateChart();
+            }
+        }
+
+        function updateChart() {
+            var startIdx = currentPage * pageSize;
+            var endIdx = startIdx + pageSize;
+            var sampledLabels = allLabels.slice(startIdx, endIdx);
+            var sampledValues = allValues.slice(startIdx, endIdx);
+
+            var data = {
+                labels: sampledLabels,
+                datasets: [{
+                    label: 'Intensity',
+                    data: sampledValues,
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    borderColor: 'rgba(75, 192, 192, 1)',
+                    borderWidth: 1
+                }]
+            };
+
+            var options = {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            };
+
+            if (myChart) {
+                myChart.destroy(); 
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: data,
+                options: options
+            });
+        }
+
+        updateChart();
+    });
+
+    // Horizontal Bar Chart
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var ctx = document.getElementById('likelihoodChart').getContext('2d');
+        var allLabels = {{ title|safe }};
+        var allValues = {{ likelihood|safe }};
+        var pageSize = 5; // Adjust as needed
+        var currentPage = 0;
+        var myChart;
+
+        window.showPrevious2 = function () {
+            if (currentPage > 0) {
+                currentPage--;
+                updateChart2();
+            }
+        };
+
+        window.showNext2 = function () {
+            if ((currentPage + 1) * pageSize < allLabels.length) {
+                currentPage++;
+                updateChart2();
+            }
+        };
+
+        function updateChart2() {
+            var startIdx = currentPage * pageSize;
+            var endIdx = startIdx + pageSize;
+            var sampledLabels = allLabels.slice(startIdx, endIdx);
+            var sampledValues = allValues.slice(startIdx, endIdx);
+
+            if (myChart) {
+                myChart.destroy();
+            }
+
+            myChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: sampledLabels,
+                    datasets: [{
+                        label: 'Likelihood',
+                        data: sampledValues,
+                        backgroundColor: 'rgba(75, 192, 192, 0.7)', // Adjust opacity if needed
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false // Hide the legend for better label visibility
+                        }
+                    },
+                    layout: {
+                        padding: {
+                            left: 50, // Adjust as needed for better text visibility
+                            right: 0,
+                            top: 0,
+                            bottom: 0
+                        }
+                    }
+                }
+            });
+        }
+
+        updateChart2();  // Initial chart rendering
+    });
+
+    // Radar Chart
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var marksCanvas = document.getElementById("radarChart");
+        
+        var allData = [
+            {{ intensity|safe }},
+            {{ likelihood|safe }},
+            {{ relevance|safe }}
+        ];
+
+        var itemsPerPage = 10;
+        var currentPage = 0;
+        var totalDataPoints = Math.min(allData[0].length, allData[1].length, allData[2].length);
+        
+        function replaceNullWithZero(array) {
+            return array.map(value => (value === null ? 0 : value));
+        }
+
+        var marksData = {
+            labels: ['Intensity', 'Likelihood', 'Relevance'],
+            datasets: [{
+                label: "Intensity",
+                backgroundColor: "rgba(255, 99, 132, 0.2)",
+                borderColor: "rgba(255, 99, 132, 1)",
+                pointBackgroundColor: "rgba(255, 99, 132, 1)",
+                data: replaceNullWithZero(allData[0].slice(0, itemsPerPage))
+            }, {
+                label: "Likelihood",
+                backgroundColor: "rgba(75, 192, 192, 0.2)",
+                borderColor: "rgba(75, 192, 192, 1)",
+                pointBackgroundColor: "rgba(75, 192, 192, 1)",
+                data: replaceNullWithZero(allData[1].slice(0, itemsPerPage))
+            }, {
+                label: "Relevance",
+                backgroundColor: "rgba(255, 205, 86, 0.2)",
+                borderColor: "rgba(255, 205, 86, 1)",
+                pointBackgroundColor: "rgba(255, 205, 86, 1)",
+                data: replaceNullWithZero(allData[2].slice(0, itemsPerPage))
+            }]
+        };
+
+        var radarChart = new Chart(marksCanvas, {
+            type: 'radar',
+            data: marksData,
+            options: {
+                elements: {
+                    line: {
+                        tension: 0.1, // Adjust the line tension
+                    }
+                }
+            }
+        });
+
+        function updateChartData() {
+            var startIndex = currentPage * itemsPerPage;
+            var endIndex = Math.min(startIndex + itemsPerPage, totalDataPoints);
+            
+            marksData.datasets[0].data = replaceNullWithZero(allData[0].slice(startIndex, endIndex));
+            marksData.datasets[1].data = replaceNullWithZero(allData[1].slice(startIndex, endIndex));
+            marksData.datasets[2].data = replaceNullWithZero(allData[2].slice(startIndex, endIndex));
+            radarChart.update();
+        }
+        
+        window.nextData = function () {
+            if ((currentPage + 1) * itemsPerPage < totalDataPoints) {
+                currentPage++;
+                updateChartData();
+            }
+        };
+
+        window.previousData = function () {
+            if (currentPage > 0) {
+                currentPage--;
+                updateChartData();
+            }
+        };
+    });
+
+    // Bubble Chart
+    
+    document.addEventListener("DOMContentLoaded", function () {
+    // Your data, replace this with your Django data
+    const intensityData = {{ intensity|safe }};
+    const likelihoodData = {{ likelihood|safe }};
+    const relevanceData = {{ relevance|safe }};
+    const countryData = {{ country|safe }};
+
+    let currentPage = 0;
+    const itemsPerPage = 100; // Adjust the page size as needed
+
+    let currentData = getCurrentData();
+
+    const margin = {top: 10, right: 20, bottom: 30, left: 50},
+        width = 500 - margin.left - margin.right,
+        height = 420 - margin.top - margin.bottom;
+
+    const svg = d3.select("#my_dataviz")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(currentData, d => d.intensity)])
+        .range([0, width]);
+    svg.append("g")
+        .attr("transform", `translate(0, ${height})`)
+        .call(d3.axisBottom(x));
+
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(currentData, d => d.likelihood)])
+        .range([height, 0]);
+    svg.append("g")
+        .call(d3.axisLeft(y));
+
+    const z = d3.scaleLinear()
+        .domain([0, d3.max(currentData, d => d.relevance)])
+        .range([4, 40]);
+
+    const myColor = d3.scaleOrdinal()
+        .domain(new Set(currentData.map(d => d.country)))
+        .range(d3.schemeSet2);
+
+    const tooltip = d3.select("#my_dataviz")
+        .append("div")
+        .style("opacity", 0)
+        .attr("class", "tooltip")
+        .style("background-color", "black")
+        .style("border-radius", "5px")
+        .style("padding", "10px")
+        .style("color", "white");
+
+    const showTooltip = function (event, d) {
+        tooltip
+            .transition()
+            .duration(200);
+        tooltip
+            .style("opacity", 1)
+            .html("Country: " + d.country + "  --  Intensity: " + d.intensity + "  --  Relevance: " + d.relevance + "  --  Likelihood: " + d.likelihood)
+            .style("left", (event.x) / 2 + "px")
+            .style("top", (event.y) / 2 + 30 + "px");
+    };
+
+    const moveTooltip = function (event, d) {
+        tooltip
+            .style("left", (event.x) / 2 + "px")
+            .style("top", (event.y) / 2 + 30 + "px");
+    };
+
+    const hideTooltip = function () {
+        tooltip
+            .transition()
+            .duration(200)
+            .style("opacity", 0);
+    };
+
+    const updateChart5 = function () {
+        currentData = getCurrentData();
+
+        svg.selectAll("*").remove(); // Clear existing chart
+
+        x.domain([0, d3.max(currentData, d => d.intensity)]);
+        svg.append("g")
+            .attr("transform", `translate(0, ${height})`)
+            .call(d3.axisBottom(x));
+
+        y.domain([0, d3.max(currentData, d => d.likelihood)]);
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        myColor.domain(new Set(currentData.map(d => d.country)));
+
+        svg.append('g')
+            .selectAll("dot")
+            .data(currentData)
+            .join("circle")
+            .attr("class", "bubbles")
+            .attr("cx", d => x(d.intensity))
+            .attr("cy", d => y(d.likelihood))
+            .attr("r", d => z(d.relevance))
+            .style("fill", d => myColor(d.country))
+            .on("mouseover", showTooltip)
+            .on("mousemove", moveTooltip)
+            .on("mouseleave", hideTooltip);
+    };
+
+    function getCurrentData() {
+        const start = currentPage * itemsPerPage;
+        const end = (currentPage + 1) * itemsPerPage;
+        return intensityData.slice(start, end).map((value, index) => ({
+            intensity: value,
+            likelihood: likelihoodData[start + index],
+            relevance: relevanceData[start + index],
+            country: countryData[start + index],
+        }));
+    }
+
+    window.nextData5 = function () {
+        if ((currentPage + 1) * itemsPerPage < intensityData.length) {
+            currentPage++;
+            updateChart5();
+        }
+    };
+
+    window.previousData5 = function () {
+        if (currentPage > 0) {
+            currentPage--;
+            updateChart5();
+        }
+    };
+
+    // Initial chart rendering
+    updateChart5();
+});
+    
+</script>
+{% endblock %}

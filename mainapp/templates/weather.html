@@ -1,0 +1,31 @@
+{% extends 'index.html' %}
+{% block title %}Weather{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card mx-auto" style="max-width: 400px;">
+        <div class="card-header bg-primary text-white text-center">
+            <h2 class="mb-0">Weather Information</h2>
+        </div>
+        <div class="card-body">
+            <form id="weatherForm" method="post">
+                {% csrf_token %}
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" name="city" placeholder="Enter City" required>
+                    <div class="input-group-append">
+                        <button type="submit" class="btn btn-primary">Get Weather</button>
+                    </div>
+                </div>
+            </form>
+
+            <hr>
+            <h3 class="text-center">Weather in {{city}}</h3>
+            <p class="text-center">Temperature: {{ temperature|floatformat:2 }}°C</p>
+            <p class="text-center">Description: {{ description }}</p>
+            <div class="text-center">
+                <img src="{{ icon }}" alt="Weather Icon" class="img-fluid">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
